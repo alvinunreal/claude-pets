@@ -1,0 +1,21 @@
+{
+  "name": "claude-pets",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "claude-pets": "./src/cli.ts"
+  },
+  "dependencies": {
+    "@openpets/client": "file:../openpets/packages/client",
+    "@openpets/core": "file:../openpets/packages/core"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "bun src/cli.ts",
+    "test": "bun test",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit"
+  }
+}
