@@ -1,22 +1,24 @@
 #!/usr/bin/env bun
 import { safeSendEvent, isOpenPetsState } from "@openpets/client";
+import { fileURLToPath } from "node:url";
 import { installClaudePets, settingsSnippet } from "./install.js";
 import { runHook } from "./hook.js";
 
-const LOCAL_HOOK_COMMAND = "bun /home/alvin/claude-pets/src/cli.ts hook";
+const PUBLISHED_HOOK_COMMAND = "bunx claude-pets hook";
+const LOCAL_HOOK_COMMAND = `bun ${JSON.stringify(fileURLToPath(import.meta.url))} hook`;
 
 async function main(argv: string[]) {
   const [command, ...rest] = argv;
   switch (command) {
     case "install": {
       const useLocalCommand = rest.includes("--local-command");
-      const targetPath = await installClaudePets(useLocalCommand ? { command: LOCAL_HOOK_COMMAND } : {});
+      const targetPath = await installClaudePets({ command: useLocalCommand ? LOCAL_HOOK_COMMAND : PUBLISHED_HOOK_COMMAND });
       console.log(`Installed Claude Code OpenPets hooks to ${targetPath}`);
       return 0;
     }
     case "print": {
       const useLocalCommand = rest.includes("--local-command");
-      console.log(settingsSnippet(useLocalCommand ? LOCAL_HOOK_COMMAND : undefined));
+      console.log(settingsSnippet(useLocalCommand ? LOCAL_HOOK_COMMAND : PUBLISHED_HOOK_COMMAND));
       return 0;
     }
     case "hook":

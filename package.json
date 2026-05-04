@@ -1,7 +1,20 @@
 {
   "name": "claude-pets",
   "version": "0.0.0",
+  "description": "Claude Code hooks for OpenPets desktop pet status updates.",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alvinunreal/claude-pets.git"
+  },
+  "keywords": [
+    "openpets",
+    "claude-code",
+    "hooks",
+    "desktop-pet",
+    "ai-agents"
+  ],
   "bin": {
     "claude-pets": "./src/cli.ts"
   },
