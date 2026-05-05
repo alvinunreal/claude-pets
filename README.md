@@ -13,6 +13,12 @@
 </p>
 
 ---
+## Video
+
+
+https://github.com/user-attachments/assets/a10edb8a-d13a-4b99-96bc-ea5c7cade741
+
+
 
 ## What is Claude Pets?
 
