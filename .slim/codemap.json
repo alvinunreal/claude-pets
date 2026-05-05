@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_run": "2026-05-05T12:46:17.124Z",
+    "root": "/home/alvin/pets/claude-pets",
+    "include_patterns": [
+      "package.json",
+      "src/**/*.ts"
+    ],
+    "exclude_patterns": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "docs/**",
+      "**/*.md",
+      "node_modules/**",
+      "dist/**"
+    ],
+    "exceptions": []
+  },
+  "file_hashes": {
+    "package.json": "1483d635decf262d261f9587ed8a47b7",
+    "src/cli.ts": "7cf67aa1d1a7f8728939121386e97017",
+    "src/hook.ts": "cd8e3b8838babc69c4ad475a63c0465b",
+    "src/install.ts": "d68d3198be9e615f05ccd583f97ea335",
+    "src/map-claude-event.ts": "7e08a8bdadb60696967633cedf4d12c6",
+    "src/settings.ts": "00635fc339c9efeb6248411811ebfc6b"
+  },
+  "folder_hashes": {
+    ".": "53820e0c4b0b1f3aeb61a827fc83038d",
+    "src": "6b96a9425c12507796515f4bd920fe8e"
+  }
+}
