@@ -42,6 +42,13 @@ Open the app once. You should see the pet on your desktop and an OpenPets tray/m
 
 > Preview builds are unsigned, so macOS or Windows may show a warning on first launch.
 
+If macOS says the app is damaged or should be moved to Trash, remove the quarantine flag and open it again:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/OpenPets.app
+open /Applications/OpenPets.app
+```
+
 ### 2. Add OpenPets to Claude Code
 
 This gives Claude Code tools for talking to and controlling the pet:
