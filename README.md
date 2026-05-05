@@ -16,145 +16,142 @@
 
 ## What is this?
 
-Claude Pets connects Claude Code to [OpenPets](https://github.com/alvinunreal/openpets), a local desktop pet that reacts to coding work.
+Claude Pets connects Claude Code hooks to [OpenPets](https://github.com/alvinunreal/openpets), a local desktop pet that reacts to coding work.
 
-Use it when you want Claude Code activity to automatically update your pet state:
+OpenPets is the required desktop app/runtime. Install it from [github.com/alvinunreal/openpets](https://github.com/alvinunreal/openpets) before enabling Claude Pets hooks.
+
+It maps coarse Claude Code activity to pet states:
 
 - prompt submitted → thinking
 - file edits → editing
 - shell commands → running/testing
-- permission prompts → waiting/waving
+- permission prompts → waving/waiting
 - stop/failure → success/error
 
-For authored pet speech, prefer the OpenPets MCP server directly. This package is for lightweight automatic status transitions through Claude Code hooks.
-
-## Current status
-
-Claude Pets is currently source-first. It expects OpenPets to be checked out next to this repo because `@openpets/client` and `@openpets/core` are local file dependencies for now.
-
-```txt
-~/repos/pets/
-  openpets/
-  claude-pets/
-```
-
-Once OpenPets packages are published, the simple `bunx claude-pets install` flow will be the default path.
+For authored pet speech, use the OpenPets MCP server directly. Claude Pets is for lightweight automatic background status transitions.
 
 ## Requirements
 
-- Bun
+- Bun `>= 1.3.0`
 - Claude Code
-- OpenPets built locally
+- OpenPets desktop app installed or running
 
-```bash
-mkdir -p ~/repos/pets
-cd ~/repos/pets
-git clone https://github.com/alvinunreal/openpets.git
-git clone https://github.com/alvinunreal/claude-pets.git
+## Install
 
-cd openpets
-bun install
-bun run build
-
-cd ../claude-pets
-bun install
-bun test
-bun run typecheck
-```
-
-Start OpenPets:
-
-```bash
-bun "$HOME/repos/pets/openpets/packages/cli/src/index.ts" start
-```
-
-## Install Claude hooks from source
-
-From a project where you use Claude Code:
-
-```bash
-bun "$HOME/repos/pets/claude-pets/src/cli.ts" install --local-command
-```
-
-This writes/merges:
-
-```txt
-.claude/settings.local.json
-```
-
-It backs up existing settings before writing.
-
-To preview the settings instead:
-
-```bash
-bun "$HOME/repos/pets/claude-pets/src/cli.ts" print --local-command
-```
-
-## Future package install
-
-After the package is published, the intended install command is:
+From the project where you use Claude Code:
 
 ```bash
 bunx claude-pets install
 ```
 
-That writes hooks using a durable `bunx claude-pets hook` command.
+This writes/merges project-local Claude settings:
 
-## Local development
-
-When working from this source checkout, install hooks using an absolute local command:
-
-```bash
-cd ~/repos/pets/claude-pets
-bun install
-bun run typecheck
-bun test
+```txt
+.claude/settings.local.json
 ```
 
-Use `--local-command` when installing hooks from this checkout. The generated hook command uses the absolute path to your local `src/cli.ts`.
+It backs up existing settings before changing them and preserves unrelated hooks.
+
+Preview the settings without writing:
+
+```bash
+bunx claude-pets install --dry-run
+```
+
+Print only the Claude settings snippet:
+
+```bash
+bunx claude-pets print
+```
+
+## Uninstall
+
+From the same project root:
+
+```bash
+bunx claude-pets uninstall
+```
+
+Preview uninstall without writing:
+
+```bash
+bunx claude-pets uninstall --dry-run
+```
+
+Uninstall removes only managed Claude Pets hook commands and preserves unrelated Claude Code settings.
 
 ## Test it
 
 With OpenPets running:
 
 ```bash
-bun "$HOME/repos/pets/claude-pets/src/cli.ts" test-event thinking
-bun "$HOME/repos/pets/claude-pets/src/cli.ts" test-event testing
-bun "$HOME/repos/pets/claude-pets/src/cli.ts" test-event success
+bunx claude-pets test-event thinking
+bunx claude-pets test-event testing
+bunx claude-pets test-event success
 ```
 
-## How it works
+## Local development
+
+When working from this source checkout, use an absolute local hook command:
+
+```bash
+cd ~/repos/pets/claude-pets
+bun install
+bun test
+bun run typecheck
+bun run build
+
+# From a Claude Code project root:
+bun ~/repos/pets/claude-pets/src/cli.ts install --local-command
+```
+
+The generated local hook command points to your checkout. Production installs use:
 
 ```txt
-Claude Code hook payload
-        ↓
-claude-pets hook mapper
-        ↓
-@openpets/client
-        ↓ same-user OS IPC
-OpenPets desktop pet
+bunx --bun claude-pets@0.1.0 hook
 ```
-
-Claude Pets never sends prompts, transcripts, diffs, shell output, or file contents. It maps hook metadata to simple OpenPets events and exits quietly if OpenPets is not running.
-
-## Uninstall
-
-Remove the `claude-pets` hook entries from:
-
-```txt
-.claude/settings.local.json
-```
-
-Installs create timestamped backups next to that file before merging changes.
 
 ## Commands
 
 ```txt
-claude-pets install [--local-command]
+claude-pets install [--dry-run] [--local-command]
+claude-pets uninstall [--dry-run]
 claude-pets print [--local-command]
 claude-pets hook
 claude-pets test-event <state>
 ```
+
+## Privacy
+
+Claude Pets never sends prompts, transcripts, diffs, shell output, or file contents. It maps Claude hook metadata to simple OpenPets events and exits quietly if OpenPets is not running.
+
+## Troubleshooting
+
+### OpenPets is not reacting
+
+- Start the OpenPets desktop app.
+- Run `bunx claude-pets test-event thinking`.
+- Confirm the OpenPets MCP/client packages are installed and current.
+
+### Hooks are not firing
+
+- Make sure you ran `bunx claude-pets install` from the Claude Code project root.
+- Check `.claude/settings.local.json` exists in that project.
+- Restart Claude Code after installing hooks.
+
+### Bun is missing
+
+Install Bun first: <https://bun.com>
+
+### Restore settings from backup
+
+Each write creates a backup next to the settings file:
+
+```txt
+.claude/settings.local.json.bak-<timestamp>
+```
+
+Quit Claude Code, copy the backup over `.claude/settings.local.json`, then restart Claude Code.
 
 ## Recommended setup
 

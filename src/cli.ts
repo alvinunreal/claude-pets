@@ -1,19 +1,36 @@
 #!/usr/bin/env bun
 import { safeSendEvent, isOpenPetsState } from "@openpets/client";
 import { fileURLToPath } from "node:url";
-import { installClaudePets, settingsSnippet } from "./install.js";
+import { installClaudePets, settingsSnippet, uninstallClaudePets } from "./install.js";
 import { runHook } from "./hook.js";
 
-const PUBLISHED_HOOK_COMMAND = "bunx claude-pets hook";
-const LOCAL_HOOK_COMMAND = `bun ${JSON.stringify(fileURLToPath(import.meta.url))} hook`;
+const PUBLISHED_HOOK_COMMAND = "bunx --bun claude-pets@0.1.0 hook";
+const LOCAL_HOOK_COMMAND = `bun ${shellQuote(fileURLToPath(import.meta.url))} hook`;
 
 async function main(argv: string[]) {
   const [command, ...rest] = argv;
   switch (command) {
     case "install": {
       const useLocalCommand = rest.includes("--local-command");
-      const targetPath = await installClaudePets({ command: useLocalCommand ? LOCAL_HOOK_COMMAND : PUBLISHED_HOOK_COMMAND });
-      console.log(`Installed Claude Code OpenPets hooks to ${targetPath}`);
+      const dryRun = rest.includes("--dry-run");
+      const result = await installClaudePets({ command: useLocalCommand ? LOCAL_HOOK_COMMAND : PUBLISHED_HOOK_COMMAND, dryRun });
+      if (dryRun) {
+        console.log(`Would install Claude Code OpenPets hooks to ${result.targetPath}`);
+        console.log(JSON.stringify(result.settings, null, 2));
+      } else {
+        console.log(`${result.changed ? "Installed" : "Already installed"} Claude Code OpenPets hooks to ${result.targetPath}`);
+      }
+      return 0;
+    }
+    case "uninstall": {
+      const dryRun = rest.includes("--dry-run");
+      const result = await uninstallClaudePets({ dryRun });
+      if (dryRun) {
+        console.log(`Would uninstall Claude Code OpenPets hooks from ${result.targetPath}`);
+        console.log(JSON.stringify(result.settings, null, 2));
+      } else {
+        console.log(`${result.changed ? "Uninstalled" : "No Claude Pets hooks found in"} ${result.targetPath}`);
+      }
       return 0;
     }
     case "print": {
@@ -56,11 +73,16 @@ function printHelp() {
   console.log(`claude-pets
 
 Usage:
-  claude-pets install [--local-command]
+  claude-pets install [--dry-run] [--local-command]
+  claude-pets uninstall [--dry-run]
   claude-pets print [--local-command]
   claude-pets hook
   claude-pets test-event <state>
 `);
+}
+
+function shellQuote(value: string) {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
 const exitCode = await main(Bun.argv.slice(2));

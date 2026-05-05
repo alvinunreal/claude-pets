@@ -1,4 +1,6 @@
-export function claudeCodeSettings(command = "claude-pets hook") {
+export const DEFAULT_HOOK_COMMAND = "bunx --bun claude-pets@0.1.0 hook";
+
+export function claudeCodeSettings(command = DEFAULT_HOOK_COMMAND) {
   return {
     hooks: {
       UserPromptSubmit: [{ hooks: [{ type: "command", command }] }],
@@ -17,10 +19,31 @@ export function claudeCodeSettings(command = "claude-pets hook") {
 }
 
 export function mergeClaudeSettings(existing: Record<string, unknown>, incoming: Record<string, unknown>) {
+  const cleanedExisting = removeClaudePetsHooks(existing);
   return {
-    ...existing,
-    hooks: mergeHookConfig(isRecord(existing.hooks) ? existing.hooks : {}, isRecord(incoming.hooks) ? incoming.hooks : {}),
+    ...cleanedExisting,
+    hooks: mergeHookConfig(isRecord(cleanedExisting.hooks) ? cleanedExisting.hooks : {}, isRecord(incoming.hooks) ? incoming.hooks : {}),
   };
+}
+
+export function removeClaudePetsHooks(settings: Record<string, unknown>) {
+  if (!isRecord(settings.hooks)) return settings;
+  const nextHooks: Record<string, unknown> = {};
+  for (const [hookName, hookEntries] of Object.entries(settings.hooks)) {
+    if (!Array.isArray(hookEntries)) {
+      nextHooks[hookName] = hookEntries;
+      continue;
+    }
+    const filtered = hookEntries
+      .map(removeClaudePetsHooksFromEntry)
+      .filter((entry): entry is Record<string, unknown> => entry !== null);
+    if (filtered.length > 0) nextHooks[hookName] = filtered;
+  }
+  return { ...settings, hooks: nextHooks };
+}
+
+export function hasClaudePetsHooks(settings: Record<string, unknown>) {
+  return JSON.stringify(settings) !== JSON.stringify(removeClaudePetsHooks(settings));
 }
 
 function mergeHookConfig(existing: Record<string, unknown>, incoming: Record<string, unknown>) {
@@ -40,6 +63,28 @@ function uniqueJsonEntries(entries: unknown[]) {
     seen.add(key);
     return true;
   });
+}
+
+function removeClaudePetsHooksFromEntry(entry: unknown): Record<string, unknown> | null {
+  if (!isRecord(entry)) return entry as Record<string, unknown>;
+  if (!Array.isArray(entry.hooks)) return entry;
+  const hooks = entry.hooks;
+  const filteredHooks = hooks.filter((hook) => !isManagedClaudePetsHook(hook));
+  if (filteredHooks.length === 0) return null;
+  return { ...entry, hooks: filteredHooks };
+}
+
+function isManagedClaudePetsHook(hook: unknown) {
+  if (!isRecord(hook)) return false;
+  if (hook.type !== "command" || typeof hook.command !== "string") return false;
+  return isManagedClaudePetsCommand(hook.command);
+}
+
+export function isManagedClaudePetsCommand(command: string) {
+  const normalized = command.trim().replace(/\s+/g, " ");
+  return normalized === "claude-pets hook"
+    || /^bunx(?: --bun)? claude-pets(?:@[\w.-]+)? hook$/.test(normalized)
+    || /^bun ['"]?.*claude-pets.*(?:cli\.ts|cli\.js)['"]? hook$/.test(normalized);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
