@@ -7,10 +7,13 @@ import { installClaudePets, uninstallClaudePets } from "./install.js";
 import { claudeCodeSettings, isManagedClaudePetsCommand, mergeClaudeSettings, removeClaudePetsHooks } from "./settings.js";
 
 const originalCwd = process.cwd();
+const originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
 const tempDirs: string[] = [];
 
 afterEach(async () => {
   process.chdir(originalCwd);
+  if (originalClaudeConfigDir === undefined) delete process.env.CLAUDE_CONFIG_DIR;
+  else process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir;
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
@@ -60,6 +63,7 @@ describe("settings", () => {
     expect(isManagedClaudePetsCommand("claude-pets hook")).toBe(true);
     expect(isManagedClaudePetsCommand("bunx claude-pets hook")).toBe(true);
     expect(isManagedClaudePetsCommand("bunx --bun claude-pets@0.1.0 hook")).toBe(true);
+    expect(isManagedClaudePetsCommand("bunx --bun @open-pets/claude-pets@0.1.0 hook")).toBe(true);
     expect(isManagedClaudePetsCommand("bun '/tmp/claude-pets/src/cli.ts' hook")).toBe(true);
     expect(isManagedClaudePetsCommand("echo claude-pets hook")).toBe(false);
   });
@@ -83,19 +87,30 @@ describe("settings", () => {
 });
 
 describe("install/uninstall", () => {
-  it("installs into empty project settings", async () => {
+  it("installs into user-wide Claude settings by default", async () => {
+    const dir = await tempProject();
+    process.env.CLAUDE_CONFIG_DIR = join(dir, ".claude-user");
+    process.chdir(dir);
+    const result = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
+    expect(result.changed).toBe(true);
+    expect(result.targetPath).toBe(join(dir, ".claude-user", "settings.json"));
+    expect(await readUserSettings(dir)).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
+  });
+
+  it("can install into project-local settings", async () => {
     const dir = await tempProject();
     process.chdir(dir);
-    const result = await installClaudePets({ command: "bunx --bun claude-pets@0.1.0 hook" });
+    const result = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook", scope: "project" });
     expect(result.changed).toBe(true);
-    expect(await readSettings(dir)).toContain("bunx --bun claude-pets@0.1.0 hook");
+    expect(await readSettings(dir)).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
   });
 
   it("reinstall is idempotent", async () => {
     const dir = await tempProject();
+    process.env.CLAUDE_CONFIG_DIR = join(dir, ".claude-user");
     process.chdir(dir);
-    await installClaudePets({ command: "bunx --bun claude-pets@0.1.0 hook" });
-    const second = await installClaudePets({ command: "bunx --bun claude-pets@0.1.0 hook" });
+    await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
+    const second = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
     expect(second.changed).toBe(false);
   });
 
@@ -110,19 +125,20 @@ describe("install/uninstall", () => {
       },
     });
     process.chdir(dir);
-    await installClaudePets({ command: "bunx --bun claude-pets@0.1.0 hook" });
+    await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook", scope: "project" });
     const settings = await readSettings(dir);
     expect(settings).not.toContain("bunx claude-pets hook");
-    expect(settings).toContain("bunx --bun claude-pets@0.1.0 hook");
+    expect(settings).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
     expect(settings).toContain("echo keep");
   });
 
   it("dry-run does not write settings", async () => {
     const dir = await tempProject();
+    process.env.CLAUDE_CONFIG_DIR = join(dir, ".claude-user");
     process.chdir(dir);
     const result = await installClaudePets({ dryRun: true });
     expect(result.changed).toBe(true);
-    await expect(readSettings(dir)).rejects.toThrow();
+    await expect(readUserSettings(dir)).rejects.toThrow();
   });
 
   it("uninstall removes claude-pets hooks only", async () => {
@@ -130,13 +146,13 @@ describe("install/uninstall", () => {
     await writeSettings(dir, {
       hooks: {
         Stop: [
-          { hooks: [{ type: "command", command: "bunx --bun claude-pets@0.1.0 hook" }] },
+          { hooks: [{ type: "command", command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" }] },
           { hooks: [{ type: "command", command: "echo keep" }] },
         ],
       },
     });
     process.chdir(dir);
-    const result = await uninstallClaudePets();
+    const result = await uninstallClaudePets({ scope: "project" });
     expect(result.changed).toBe(true);
     const settings = await readSettings(dir);
     expect(settings).not.toContain("claude-pets");
@@ -147,14 +163,14 @@ describe("install/uninstall", () => {
     const dir = await tempProject();
     await writeSettings(dir, { hooks: [] });
     process.chdir(dir);
-    await expect(installClaudePets()).rejects.toThrow("non-object hooks");
+    await expect(installClaudePets({ scope: "project" })).rejects.toThrow("non-object hooks");
   });
 
   it("rejects top-level non-object settings", async () => {
     const dir = await tempProject();
     await writeSettings(dir, []);
     process.chdir(dir);
-    await expect(installClaudePets()).rejects.toThrow("must contain a JSON object");
+    await expect(installClaudePets({ scope: "project" })).rejects.toThrow("must contain a JSON object");
   });
 });
 
@@ -172,4 +188,8 @@ async function writeSettings(dir: string, settings: unknown) {
 
 function readSettings(dir: string) {
   return readFile(join(dir, ".claude", "settings.local.json"), "utf8");
+}
+
+function readUserSettings(dir: string) {
+  return readFile(join(dir, ".claude-user", "settings.json"), "utf8");
 }

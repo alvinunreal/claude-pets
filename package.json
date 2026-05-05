@@ -1,5 +1,5 @@
 {
-  "name": "claude-pets",
+  "name": "@open-pets/claude-pets",
   "version": "0.1.0",
   "description": "Claude Code hooks for OpenPets desktop pet status updates.",
   "type": "module",
@@ -16,14 +16,14 @@
     "ai-agents"
   ],
   "bin": {
-    "claude-pets": "./dist/cli.js"
+    "claude-pets": "dist/cli.js"
   },
   "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md", "assets/claude-pets.png"],
   "engines": {
     "bun": ">=1.3.0"
   },
   "dependencies": {
-    "@openpets/client": "0.1.0"
+    "@open-pets/client": "0.1.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

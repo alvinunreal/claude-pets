@@ -1,4 +1,4 @@
-import { createManualEvent, type OpenPetsEvent, type OpenPetsState } from "@openpets/client";
+import { createManualEvent, type OpenPetsEvent, type OpenPetsState } from "@open-pets/client";
 
 const editTools = new Set(["Edit", "Write", "MultiEdit"]);
 const testCommandPattern = /\b(test|vitest|jest|pytest|bun test|npm test)\b/i;

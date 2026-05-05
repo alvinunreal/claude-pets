@@ -8,17 +8,17 @@ Scope: publishable `claude-pets` package for installing Claude Code hooks that s
 Make `claude-pets` installable by users with:
 
 ```bash
-bunx claude-pets install
+bunx @open-pets/claude-pets install
 ```
 
-The package should safely install project-local Claude Code hooks and invoke OpenPets through the published `@openpets/client` package.
+The package should safely install project-local Claude Code hooks and invoke OpenPets through the published `@open-pets/client` package.
 
 ## Launch contract
 
 `claude-pets` is an optional companion to OpenPets:
 
 - OpenPets desktop app is installed separately.
-- `@openpets/mcp` handles authored safe speech and explicit tools.
+- `@open-pets/mcp` handles authored safe speech and explicit tools.
 - `claude-pets` handles automatic Claude Code hook → pet state transitions.
 
 ## Current blockers
@@ -37,7 +37,7 @@ Current issues:
 Required:
 
 - set version to `0.1.0`
-- depend only on published `@openpets/client: 0.1.0`; do not depend directly on `@openpets/core`
+- depend only on published `@open-pets/client: 0.1.0`; do not depend directly on `@open-pets/core`
 - compile to `dist`
 - point `bin` to `dist/cli.js`
 - include only `dist`, `README.md`, `LICENSE`, and relevant assets/docs
@@ -50,7 +50,7 @@ Current package uses Bun APIs:
 - `#!/usr/bin/env bun`
 - `Bun.argv`
 - `Bun.stdin.stream()` in hook handling
-- `bunx claude-pets hook` as installed hook command
+- `bunx --bun @open-pets/claude-pets@0.1.0 hook` as installed hook command
 
 Recommendation for v0.1:
 
@@ -82,7 +82,7 @@ Required before release:
 Current published hook command:
 
 ```txt
-bunx --bun claude-pets@0.1.0 hook
+bunx --bun @open-pets/claude-pets@0.1.0 hook
 ```
 
 Required:
@@ -91,9 +91,9 @@ Required:
 - local development path stays behind `--local-command`
 - install/uninstall should recognize old and new managed commands:
   - `claude-pets hook`
-  - `bunx claude-pets hook`
+  - `bunx @open-pets/claude-pets hook`
   - `bunx --bun claude-pets hook`
-  - `bunx claude-pets@... hook`
+  - `bunx @open-pets/claude-pets@... hook`
   - `bunx --bun claude-pets@... hook`
   - local `bun /path/to/claude-pets/... hook`
 
@@ -102,7 +102,7 @@ Required:
 Required README changes:
 
 - lead with OpenPets desktop prerequisite
-- lead with `bunx claude-pets install`
+- lead with `bunx @open-pets/claude-pets install`
 - explain project-local settings file
 - document `uninstall`, `print`, `test-event`, `--local-command`
 - troubleshooting:
@@ -148,7 +148,7 @@ Add tests for:
 
 1. Update package metadata for `0.1.0` and dist publishing.
 2. Add `dist` build config and build script.
-3. Replace local OpenPets dependencies with only `@openpets/client: 0.1.0`.
+3. Replace local OpenPets dependencies with only `@open-pets/client: 0.1.0`.
 4. Add uninstall/dry-run/idempotent replace behavior.
 5. Add tests for settings install/uninstall behavior.
 6. Update README to package-first install flow.
@@ -158,5 +158,5 @@ Add tests for:
 
 ## Release blockers external to this repo
 
-- `@openpets/core@0.1.0` and `@openpets/client@0.1.0` must be published or the package install path must be tested with tarballs.
+- `@open-pets/core@0.1.0` and `@open-pets/client@0.1.0` must be published or the package install path must be tested with tarballs.
 - OpenPets desktop app should be installed/running for end-to-end smoke tests.

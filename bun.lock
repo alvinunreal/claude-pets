@@ -5,8 +5,7 @@
     "": {
       "name": "claude-pets",
       "dependencies": {
-        "@openpets/client": "file:../openpets/packages/client",
-        "@openpets/core": "file:../openpets/packages/core",
+        "@open-pets/client": "0.1.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -15,9 +14,9 @@
     },
   },
   "packages": {
-    "@openpets/client": ["@openpets/client@file:../openpets/packages/client", { "devDependencies": { "@types/bun": "latest", "typescript": "^5.9.3" } }],
+    "@open-pets/client": ["@open-pets/client@0.1.0", "", { "dependencies": { "@open-pets/core": "0.1.0" } }, "sha512-f8TMNheXk5adanrHJD9DUs1lMAqvfyYM9pnbcE3+K4bGa11Ww4Khwlu0EA/5xKiKvQHaDDrP5H8BAHWPc3wAUA=="],
 
-    "@openpets/core": ["@openpets/core@file:../openpets/packages/core", { "devDependencies": { "@types/bun": "latest", "typescript": "^5.9.3" } }],
+    "@open-pets/core": ["@open-pets/core@0.1.0", "", {}, "sha512-5Yt68IcJPlWXCPKmaYdgcmOy7mnceTRuVCPXhuTE0HWz0pPYC8g5Si4mBJvlN03qMMewvhX3A3EaAR1TT7/2DA=="],
 
     "@types/bun": ["@types/bun@1.3.13", "", { "dependencies": { "bun-types": "1.3.13" } }, "sha512-9fqXWk5YIHGGnUau9TEi+qdlTYDAnOj+xLCmSTwXfAIqXr2x4tytJb43E9uCvt09zJURKXwAtkoH4nLQfzeTXw=="],
 

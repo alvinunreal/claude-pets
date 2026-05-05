@@ -1,6 +1,9 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { claudeCodeSettings, hasClaudePetsHooks, mergeClaudeSettings, removeClaudePetsHooks } from "./settings.js";
+
+export type InstallScope = "user" | "project";
 
 export type SettingsUpdateResult = {
   targetPath: string;
@@ -12,8 +15,8 @@ export function settingsSnippet(command?: string) {
   return JSON.stringify(claudeCodeSettings(command), null, 2);
 }
 
-export async function installClaudePets(options: { command?: string; dryRun?: boolean } = {}): Promise<SettingsUpdateResult> {
-  const targetPath = resolve(process.cwd(), ".claude", "settings.local.json");
+export async function installClaudePets(options: { command?: string; dryRun?: boolean; scope?: InstallScope } = {}): Promise<SettingsUpdateResult> {
+  const targetPath = resolveSettingsPath(options.scope ?? "user");
   const existing = await readJsonFile(targetPath);
   assertSafeHooks(targetPath, existing);
 
@@ -27,8 +30,8 @@ export async function installClaudePets(options: { command?: string; dryRun?: bo
   return { targetPath, changed, settings: next };
 }
 
-export async function uninstallClaudePets(options: { dryRun?: boolean } = {}): Promise<SettingsUpdateResult> {
-  const targetPath = resolve(process.cwd(), ".claude", "settings.local.json");
+export async function uninstallClaudePets(options: { dryRun?: boolean; scope?: InstallScope } = {}): Promise<SettingsUpdateResult> {
+  const targetPath = resolveSettingsPath(options.scope ?? "user");
   const existing = await readJsonFile(targetPath);
   if (existing === null) return { targetPath, changed: false, settings: {} };
   assertSafeHooks(targetPath, existing);
@@ -40,6 +43,11 @@ export async function uninstallClaudePets(options: { dryRun?: boolean } = {}): P
     await writeFile(targetPath, `${JSON.stringify(next, null, 2)}\n`);
   }
   return { targetPath, changed, settings: next };
+}
+
+export function resolveSettingsPath(scope: InstallScope) {
+  if (scope === "project") return resolve(process.cwd(), ".claude", "settings.local.json");
+  return resolve(process.env.CLAUDE_CONFIG_DIR ?? resolve(homedir(), ".claude"), "settings.json");
 }
 
 async function readJsonFile(path: string) {

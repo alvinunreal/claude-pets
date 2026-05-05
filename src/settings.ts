@@ -1,4 +1,4 @@
-export const DEFAULT_HOOK_COMMAND = "bunx --bun claude-pets@0.1.0 hook";
+export const DEFAULT_HOOK_COMMAND = "bunx --bun @open-pets/claude-pets@0.1.0 hook";
 
 export function claudeCodeSettings(command = DEFAULT_HOOK_COMMAND) {
   return {
@@ -84,6 +84,7 @@ export function isManagedClaudePetsCommand(command: string) {
   const normalized = command.trim().replace(/\s+/g, " ");
   return normalized === "claude-pets hook"
     || /^bunx(?: --bun)? claude-pets(?:@[\w.-]+)? hook$/.test(normalized)
+    || /^bunx(?: --bun)? @open-pets\/claude-pets(?:@[\w.-]+)? hook$/.test(normalized)
     || /^bun ['"]?.*claude-pets.*(?:cli\.ts|cli\.js)['"]? hook$/.test(normalized);
 }
 
