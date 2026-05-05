@@ -81,7 +81,7 @@ This updates your user-wide Claude Code settings:
 
 The installer preserves unrelated settings and creates a backup before writing.
 
-Restart Claude Code after installing.
+Restart Claude Code after installing, then run `/hooks` in Claude Code. The Claude Pets commands should appear under user settings. If they do not appear there, Claude Code has not loaded the hooks yet.
 
 ## Test it
 
@@ -132,8 +132,17 @@ bunx @open-pets/claude-pets install
 ```
 
 2. Restart Claude Code.
-3. In Claude Code, run `/hooks` and confirm the Claude Pets command appears under user settings.
+3. In Claude Code, run `/hooks` and confirm the Claude Pets command appears under user settings. Treat `/hooks` as the source of truth: if Claude Pets is not listed there, Claude Code has not loaded the hooks.
 4. Check that `~/.claude/settings.json` contains `@open-pets/claude-pets`.
+5. If `bunx @open-pets/claude-pets test-event thinking` works but normal Claude Code prompts do not update the pet, the desktop app is working and the issue is hook loading.
+
+On Windows, you can also test the hook command directly from PowerShell while OpenPets is running:
+
+```powershell
+'{"hook_event_name":"UserPromptSubmit"}' | bunx --bun @open-pets/claude-pets@0.1.0 hook
+```
+
+If this makes the pet think, the hook command works and Claude Code still needs to load the hook config.
 
 ### Bun is missing
 
@@ -155,7 +164,9 @@ Quit Claude Code, copy the backup over `~/.claude/settings.json`, then restart C
 
 ### Project-only install
 
-Global install is recommended. If you only want Claude Pets hooks in one project, run this from that project root:
+Global install is recommended. Project-only hooks are written to `.claude/settings.local.json`, but Claude Code must load that project settings file for the hooks to run. Always verify project-only installs with `/hooks`.
+
+If you only want Claude Pets hooks in one project, run this from that project root:
 
 ```bash
 bunx @open-pets/claude-pets install --project
