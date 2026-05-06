@@ -41,6 +41,11 @@ describe("mapClaudeEventToOpenPets", () => {
     expect(mapClaudeEventToOpenPets({ hook_event_name: "StopFailure" })).toMatchObject({ state: "error" });
   });
 
+  it("maps idle prompt notifications to idle", () => {
+    expect(mapClaudeEventToOpenPets({ hook_event_name: "Notification", notification_type: "idle_prompt" })).toMatchObject({ state: "idle" });
+    expect(mapClaudeEventToOpenPets({ hook_event_name: "Notification", notification_type: "permission_request" })).toMatchObject({ state: "waiting" });
+  });
+
   it("returns null for unknown input", () => {
     expect(mapClaudeEventToOpenPets(null)).toBeNull();
     expect(mapClaudeEventToOpenPets({ hook_event_name: "Unknown" })).toBeNull();

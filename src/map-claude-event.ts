@@ -13,8 +13,9 @@ export function mapClaudeEventToOpenPets(payload: unknown): OpenPetsEvent | null
     ? (record.tool_input as Record<string, unknown>)
     : {};
   const command = typeof toolInput.command === "string" ? toolInput.command : "";
+  const notificationType = typeof record.notification_type === "string" ? record.notification_type : "";
 
-  const state = mapHookState(hookName, toolName, command);
+  const state = mapHookState(hookName, toolName, command, notificationType);
   if (!state) return null;
 
   return createManualEvent(state, {
@@ -24,12 +25,12 @@ export function mapClaudeEventToOpenPets(payload: unknown): OpenPetsEvent | null
   });
 }
 
-function mapHookState(hookName: string, toolName: string, command: string): OpenPetsState | null {
+function mapHookState(hookName: string, toolName: string, command: string, notificationType: string): OpenPetsState | null {
   if (hookName === "UserPromptSubmit") return "thinking";
   if (hookName === "PreToolUse" && editTools.has(toolName)) return "editing";
   if (hookName === "PreToolUse" && toolName === "Bash") return testCommandPattern.test(command) ? "testing" : "running";
   if (hookName === "PermissionRequest") return "waving";
-  if (hookName === "Notification") return "waiting";
+  if (hookName === "Notification") return notificationType === "idle_prompt" ? "idle" : "waiting";
   if (hookName === "Stop") return "success";
   if (hookName === "StopFailure") return "error";
   return null;
