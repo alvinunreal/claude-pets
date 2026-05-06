@@ -1,12 +1,7 @@
 import { createManualEvent, safeSendEvent, type OpenPetsState } from "@open-pets/client";
 import { mapClaudeEventToOpenPets } from "./map-claude-event.js";
 
-const autoIdleDelaysMs: Partial<Record<OpenPetsState, number>> = {
-  success: 2000,
-  error: 2600,
-  warning: 2400,
-  celebrating: 2400,
-};
+const terminalStates: OpenPetsState[] = ["success", "error"];
 
 export async function runHook(stdin: ReadableStream<Uint8Array> = Bun.stdin.stream()) {
   const body = await new Response(stdin).text().catch(() => "{}");
@@ -22,14 +17,13 @@ export async function runHook(stdin: ReadableStream<Uint8Array> = Bun.stdin.stre
 
   const result = await safeSendEvent(event);
   if (!result.ok && process.env.OPENPETS_DEBUG) console.error(result.error);
-  await autoReturnToIdle(event.state);
-  return 0;
-}
 
-async function autoReturnToIdle(state: OpenPetsState) {
-  const delayMs = autoIdleDelaysMs[state];
-  if (!delayMs) return;
-  await Bun.sleep(delayMs);
-  const result = await safeSendEvent(createManualEvent("idle", { source: "claude-code", type: "claude.auto-idle" }));
-  if (!result.ok && process.env.OPENPETS_DEBUG) console.error(result.error);
+  // For terminal states (success/error), immediately send idle so OpenPets
+  // temporary success/error animation keeps rendering but fallback becomes idle
+  if (terminalStates.includes(event.state)) {
+    const idleResult = await safeSendEvent(createManualEvent("idle", { source: "claude-code", type: "claude.auto-idle" }));
+    if (!idleResult.ok && process.env.OPENPETS_DEBUG) console.error(idleResult.error);
+  }
+
+  return 0;
 }
