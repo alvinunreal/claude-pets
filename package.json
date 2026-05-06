@@ -1,6 +1,6 @@
 {
   "name": "@open-pets/claude-pets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Claude Code hooks for OpenPets desktop pet status updates.",
   "type": "module",
   "license": "MIT",
