@@ -145,7 +145,7 @@ bunx @open-pets/claude-pets install
 On Windows, you can also test the hook command directly from PowerShell while OpenPets is running:
 
 ```powershell
-'{"hook_event_name":"UserPromptSubmit"}' | bunx --bun @open-pets/claude-pets@0.1.0 hook
+'{"hook_event_name":"UserPromptSubmit"}' | bunx --bun @open-pets/claude-pets hook
 ```
 
 If this makes the pet think, the hook command works and Claude Code still needs to load the hook config.
@@ -205,7 +205,27 @@ bunx @open-pets/claude-pets print
 Production hooks use this command:
 
 ```txt
-bunx --bun @open-pets/claude-pets@0.1.0 hook
+bunx --bun @open-pets/claude-pets@<package-version> hook
+```
+
+The installer derives `<package-version>` from the installed package so hook commands stay in sync with the published release.
+
+### Diagnose your setup
+
+```bash
+bunx @open-pets/claude-pets doctor
+```
+
+Use `--project` to inspect project-local hooks:
+
+```bash
+bunx @open-pets/claude-pets doctor --project
+```
+
+If you launch Claude Code with `CLAUDE_CONFIG_DIR`, run `doctor` with the same environment variable so it inspects the same profile:
+
+```bash
+CLAUDE_CONFIG_DIR=/path/to/claude-profile bunx @open-pets/claude-pets doctor
 ```
 
 ## Commands
@@ -216,6 +236,7 @@ claude-pets uninstall [--dry-run] [--project]
 claude-pets print [--local-command]
 claude-pets hook
 claude-pets test-event <state>
+claude-pets doctor [--project]
 ```
 
 ## Local development

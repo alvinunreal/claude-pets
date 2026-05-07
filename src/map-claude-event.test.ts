@@ -4,11 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mapClaudeEventToOpenPets } from "./map-claude-event.js";
 import { installClaudePets, uninstallClaudePets } from "./install.js";
-import { claudeCodeSettings, isManagedClaudePetsCommand, mergeClaudeSettings, removeClaudePetsHooks } from "./settings.js";
+import { readFileSync } from "node:fs";
+import { claudeCodeSettings, DEFAULT_HOOK_COMMAND, isManagedClaudePetsCommand, mergeClaudeSettings, removeClaudePetsHooks } from "./settings.js";
+import { getPackageVersion, getPublishedHookCommand } from "./version.js";
 
 const originalCwd = process.cwd();
 const originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
 const tempDirs: string[] = [];
+const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
 
 afterEach(async () => {
   process.chdir(originalCwd);
@@ -53,6 +56,12 @@ describe("mapClaudeEventToOpenPets", () => {
 });
 
 describe("settings", () => {
+  it("keeps the published hook command in sync with package.json", () => {
+    expect(getPackageVersion()).toBe(packageJson.version);
+    expect(getPublishedHookCommand()).toBe(`bunx --bun @open-pets/claude-pets@${packageJson.version} hook`);
+    expect(DEFAULT_HOOK_COMMAND).toBe(getPublishedHookCommand());
+  });
+
   it("uses the provided command", () => {
     const settings = claudeCodeSettings("bun ./src/cli.ts hook");
     expect(JSON.stringify(settings)).toContain("bun ./src/cli.ts hook");
@@ -67,8 +76,8 @@ describe("settings", () => {
   it("recognizes managed claude-pets commands", () => {
     expect(isManagedClaudePetsCommand("claude-pets hook")).toBe(true);
     expect(isManagedClaudePetsCommand("bunx claude-pets hook")).toBe(true);
-    expect(isManagedClaudePetsCommand("bunx --bun claude-pets@0.1.0 hook")).toBe(true);
-    expect(isManagedClaudePetsCommand("bunx --bun @open-pets/claude-pets@0.1.0 hook")).toBe(true);
+    expect(isManagedClaudePetsCommand(`bunx --bun claude-pets@${packageJson.version} hook`)).toBe(true);
+    expect(isManagedClaudePetsCommand(getPublishedHookCommand())).toBe(true);
     expect(isManagedClaudePetsCommand("bun '/tmp/claude-pets/src/cli.ts' hook")).toBe(true);
     expect(isManagedClaudePetsCommand("echo claude-pets hook")).toBe(false);
   });
@@ -96,26 +105,26 @@ describe("install/uninstall", () => {
     const dir = await tempProject();
     process.env.CLAUDE_CONFIG_DIR = join(dir, ".claude-user");
     process.chdir(dir);
-    const result = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
+    const result = await installClaudePets({ command: getPublishedHookCommand() });
     expect(result.changed).toBe(true);
     expect(result.targetPath).toBe(join(dir, ".claude-user", "settings.json"));
-    expect(await readUserSettings(dir)).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
+    expect(await readUserSettings(dir)).toContain(getPublishedHookCommand());
   });
 
   it("can install into project-local settings", async () => {
     const dir = await tempProject();
     process.chdir(dir);
-    const result = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook", scope: "project" });
+    const result = await installClaudePets({ command: getPublishedHookCommand(), scope: "project" });
     expect(result.changed).toBe(true);
-    expect(await readSettings(dir)).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
+    expect(await readSettings(dir)).toContain(getPublishedHookCommand());
   });
 
   it("reinstall is idempotent", async () => {
     const dir = await tempProject();
     process.env.CLAUDE_CONFIG_DIR = join(dir, ".claude-user");
     process.chdir(dir);
-    await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
-    const second = await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" });
+    await installClaudePets({ command: getPublishedHookCommand() });
+    const second = await installClaudePets({ command: getPublishedHookCommand() });
     expect(second.changed).toBe(false);
   });
 
@@ -130,10 +139,10 @@ describe("install/uninstall", () => {
       },
     });
     process.chdir(dir);
-    await installClaudePets({ command: "bunx --bun @open-pets/claude-pets@0.1.0 hook", scope: "project" });
+    await installClaudePets({ command: getPublishedHookCommand(), scope: "project" });
     const settings = await readSettings(dir);
     expect(settings).not.toContain("bunx claude-pets hook");
-    expect(settings).toContain("bunx --bun @open-pets/claude-pets@0.1.0 hook");
+    expect(settings).toContain(getPublishedHookCommand());
     expect(settings).toContain("echo keep");
   });
 
@@ -151,7 +160,7 @@ describe("install/uninstall", () => {
     await writeSettings(dir, {
       hooks: {
         Stop: [
-          { hooks: [{ type: "command", command: "bunx --bun @open-pets/claude-pets@0.1.0 hook" }] },
+          { hooks: [{ type: "command", command: getPublishedHookCommand() }] },
           { hooks: [{ type: "command", command: "echo keep" }] },
         ],
       },

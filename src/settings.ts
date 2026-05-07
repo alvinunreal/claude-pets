@@ -1,4 +1,6 @@
-export const DEFAULT_HOOK_COMMAND = "bunx --bun @open-pets/claude-pets@0.1.0 hook";
+import { getPublishedHookCommand } from "./version.js";
+
+export const DEFAULT_HOOK_COMMAND = getPublishedHookCommand();
 
 export function claudeCodeSettings(command = DEFAULT_HOOK_COMMAND) {
   return {

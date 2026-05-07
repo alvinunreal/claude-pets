@@ -4,11 +4,13 @@ Source code for the Claude Pets CLI and hook system.
 
 ## Responsibility
 
-- **cli.ts**: Entry point handling all CLI commands (install, uninstall, print, hook, test-event)
+- **cli.ts**: Entry point handling all CLI commands (install, uninstall, print, hook, test-event, doctor)
+- **doctor.ts**: Setup diagnostics for Bun, Claude Code, hook installation, hook version, and OpenPets reachability
 - **install.ts**: Settings file I/O, backup creation, and safe JSON merging
 - **settings.ts**: Hook configuration generation and settings manipulation utilities
 - **hook.ts**: Runtime hook execution, event processing, and OpenPets communication
 - **map-claude-event.ts**: Event translation layer from Claude Code to OpenPets states
+- **version.ts**: Single source of truth for package version and published hook command generation
 
 ## Design
 
@@ -45,7 +47,8 @@ cli.ts main()
   │         ├─ mapClaudeEventToOpenPets() → map-claude-event.ts
   │         ├─ safeSendEvent() → @open-pets/client
   │         └─ autoReturnToIdle() for terminal states
-  └─ test-event → Direct safeSendEvent() call
+  ├─ test-event → Direct safeSendEvent() call
+  └─ doctor → doctor.ts collectDoctorChecks()
 ```
 
 ## Integration
@@ -54,6 +57,6 @@ cli.ts main()
 
 **Node.js fs/os/path**: Used for cross-platform settings file resolution and safe file operations with backups.
 
-**Bun APIs**: Bun.stdin.stream() for efficient stdin reading, Bun.sleep() for auto-idle delays.
+**Bun APIs**: Bun.stdin.stream() for efficient stdin reading. Test and local development commands use Bun as the runtime.
 
 **Claude Code Settings Schema**: Generates settings compatible with Claude Code's hooks configuration format with matchers and command types.

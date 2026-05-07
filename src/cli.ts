@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
 import { safeSendEvent, isOpenPetsState } from "@open-pets/client";
 import { fileURLToPath } from "node:url";
+import { runDoctor } from "./doctor.js";
 import { installClaudePets, settingsSnippet, uninstallClaudePets } from "./install.js";
 import { runHook } from "./hook.js";
+import { getPublishedHookCommand } from "./version.js";
 
-const PUBLISHED_HOOK_COMMAND = "bunx --bun @open-pets/claude-pets@0.1.0 hook";
+const PUBLISHED_HOOK_COMMAND = getPublishedHookCommand();
 const LOCAL_HOOK_COMMAND = `bun ${shellQuote(fileURLToPath(import.meta.url))} hook`;
 
 async function main(argv: string[]) {
@@ -44,6 +46,8 @@ async function main(argv: string[]) {
       return runHook();
     case "test-event":
       return testEvent(rest);
+    case "doctor":
+      return runDoctor({ scope: rest.includes("--project") ? "project" : "user" });
     case "help":
     case "--help":
     case "-h":
@@ -84,6 +88,7 @@ Usage:
   claude-pets print [--local-command]
   claude-pets hook
   claude-pets test-event <state>
+  claude-pets doctor [--project]
 
 By default, install/uninstall updates your user-wide Claude Code settings:
   ~/.claude/settings.json
