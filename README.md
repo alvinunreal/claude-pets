@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/claude-pets.png" alt="Claude Pets - pixel art Claude Code integration for OpenPets" width="100%" />
+</p>
+
 <h1 align="center">Claude Pets is now OpenPets</h1>
 
 <p align="center">
